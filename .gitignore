@@ -1,0 +1,90 @@
+# ==============================================================================
+# Git Ignore Configuration - Movie Recommendation System
+# ==============================================================================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# C extensions
+*.so
+
+# Distribution / packaging
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+bin/
+include/
+lib/
+
+# Jupyter Notebook checkpoints & cache
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+
+# Large Machine Learning Models & Serialized Pickles (>100MB exceeds GitHub limits)
+*.pkl
+*.pickle
+cv.pkl
+similarity.pkl
+vector.pkl
+new_df.pkl
+
+# Datasets (CSV files: ~40MB and ~5.7MB, within GitHub 100MB limit - tracked)
+# !tmdb_5000_credits.csv
+# !tmdb_5000_movies.csv
+
+# Environment variables, credentials, and API keys
+.env
+.env.*
+*.env
+
+# IDE & Editor Configurations
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# macOS / OS metadata
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs and databases
+*.log
+*.sqlite3
+vector.pkl
+similarity.pkl
+*.pkl
+*.pkl

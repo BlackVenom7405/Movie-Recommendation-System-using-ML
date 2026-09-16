@@ -1,0 +1,329 @@
+================================================================================
+          MOVIE RECOMMENDATION SYSTEM (CONTENT-BASED & HYBRID ENGINE)
+                 COMPLETE TECHNICAL SPECIFICATION & ARCHITECTURE
+================================================================================
+
+1. PROJECT OVERVIEW
+--------------------------------------------------------------------------------
+This project is an intelligent Content-Based Movie Recommendation Engine with a
+Dynamic Fallback Hybrid Architecture. It utilizes Natural Language Processing (NLP)
+and vector space similarity to recommend movies based on genre, plot keywords,
+overview synopsis, top cast members, and directors.
+
+The system features a dual-layer recommendation pipeline:
+  1. Offline / Local Inference Engine: Ultra-fast recommendations via precomputed
+     cosine similarity matrices over the TMDB 5,000 movie dataset with fuzzy
+     string matching for error-tolerant search.
+  2. Online Dynamic Fallback Engine: Real-time metadata querying via The Movie
+     Database (TMDB) REST API for movies outside the local dataset, processing
+     them on the fly through the same NLP pipeline and projecting them into the
+     fitted vector space.
+
+
+================================================================================
+2. SYSTEM ARCHITECTURE
+================================================================================
+
+                               +-----------------------+
+                               | tmdb_5000_movies.csv  |
+                               | tmdb_5000_credits.csv |
+                               +-----------+-----------+
+                                           |
+                                           v
+                             +---------------------------+
+                             | DATA PREPROCESSING & ETL  |
+                             | - Merge on 'title'        |
+                             | - Extract JSON fields     |
+                             | - Drop null values        |
+                             +-------------+-------------+
+                                           |
+                                           v
+                             +---------------------------+
+                             |   FEATURE ENGINEERING     |
+                             | - Entity whitespace coll. |
+                             | - Tag concatenation       |
+                             | - Lowercasing             |
+                             | - Porter Stemming         |
+                             +-------------+-------------+
+                                           |
+                                           v
+                             +---------------------------+
+                             |   VECTORIZATION & SIM     |
+                             | - CountVectorizer (5000)  |
+                             | - Cosine Similarity       |
+                             +-------------+-------------+
+                                           |
+                  +------------------------+------------------------+
+                  |                        |                        |
+                  v                        v                        v
+            [new_df.pkl]            [similarity.pkl]         [cv.pkl / vector.pkl]
+            (Metadata)             (4806 x 4806 matrix)     (Vocabulary & Matrix)
+                  |                        |                        |
+  ================|========================|========================|===================
+  RUNTIME INFERENCE PIPELINE               |                        |
+  =========================================|========================|===================
+                                           |                        |
+                           User Input: Movie Title                  |
+                                     |                              |
+                                     v                              |
+                     +-------------------------------+              |
+                     | Fuzzy String Match (difflib)  |              |
+                     | Cutoff >= 0.6 on local titles |              |
+                     +---------------+---------------+              |
+                                     |                              |
+                   Match Found? -----+----- No Match                |
+                       |                          |                 |
+                     YES                          v                 |
+                       |              +-----------------------+     |
+                       |              | TMDB REST API Fallback|     |
+                       |              | - /search/movie       |     |
+                       |              | - /movie/{id}         |     |
+                       |              | - /movie/{id}/keywords|     |
+                       |              | - /movie/{id}/credits |     |
+                       |              +-----------+-----------+     |
+                       |                          |                 |
+                       |                          v                 |
+                       |              +-----------------------+     |
+                       |              | Real-time Tag Builder |     |
+                       |              | & Porter Stemmer      |     |
+                       |              +-----------+-----------+     |
+                       |                          |                 |
+                       |                          v                 |
+                       |              +-----------------------+     |
+                       |              | cv.transform([tags])  |<----+
+                       |              +-----------+-----------+
+                       |                          |
+                       |                          v
+                       |              +-----------------------+
+                       |              | cosine_similarity     |
+                       |              | (api_vector, vector)  |<----+
+                       |              +-----------+-----------+
+                       |                          |
+                       v                          v
+             [Index Lookup in Matrix]     [Ranked Distance Array]
+                       |                          |
+                       +------------+-------------+
+                                    |
+                                    v
+                       +-------------------------+
+                       | Top 5 Ranked Candidates |
+                       +-------------------------+
+
+
+================================================================================
+3. LIBRARIES & DEPENDENCIES
+================================================================================
+
+A. Standard Library (Python Built-ins):
+--------------------------------------------------------------------------------
+1. ast (Abstract Syntax Trees)
+   - Module: `ast.literal_eval`
+   - Purpose: Safely parses string representations of JSON/Python objects stored
+     within CSV columns (genres, keywords, cast, crew) into native Python lists
+     and dicts without security risks of `eval()`.
+
+2. difflib
+   - Module: `difflib.get_close_matches`
+   - Purpose: Performs approximate (fuzzy) string matching using the Gestalt
+     Pattern Matching algorithm to tolerate user typos, casing differences, and
+     partial title inputs.
+
+3. pickle
+   - Purpose: Object serialization and deserialization for model weights, feature
+     matrices, vectorizer state, and clean DataFrames.
+
+4. json
+   - Purpose: Parsing responses received from HTTP API endpoints.
+
+5. os
+   - Purpose: Operating system pathing and file handling.
+
+
+B. Third-Party Scientific & Machine Learning Libraries:
+--------------------------------------------------------------------------------
+1. pandas (v2.x)
+   - Data loading (`read_csv`), inner joins (`merge`), columnar transformations
+     (`apply`), slicing, filtering, null handling (`dropna`), and metadata indexing.
+
+2. numpy (v1.x / v2.x)
+   - Multi-dimensional array structures, dense matrix conversions (`.toarray()`),
+     vector distance computations, and high-performance numerical operations.
+
+3. scikit-learn (sklearn)
+   - `sklearn.feature_extraction.text.CountVectorizer`:
+     Converts a collection of text documents to a matrix of token counts.
+     Used with `max_features=5000` and `stop_words='english'`.
+   - `sklearn.metrics.pairwise.cosine_similarity`:
+     Calculates the L2-normalized inner product between vectors, computing
+     pairwise cosine similarities between all movies.
+
+4. nltk (Natural Language Toolkit)
+   - `nltk.stem.PorterStemmer`:
+     Linguistic rule-based morphological normalization algorithm. Reduces words
+     to their base/stem form (e.g. "actions", "acting" -> "action").
+
+5. requests
+   - HTTP library for calling The Movie Database (TMDB) REST API (v3) over HTTPS.
+
+6. matplotlib.pyplot
+   - Optional plotting and data distribution analysis.
+
+
+================================================================================
+4. ALGORITHMS & MATHEMATICAL CONCEPTS
+================================================================================
+
+1. Bag of Words (BoW) & Tokenization (CountVectorizer):
+   - Model representation where text is represented as the bag (multiset) of its
+     words, disregarding grammar and word order.
+   - Restricts the feature vocabulary to the top N (5,000) most frequent tokens
+     across all movie tag documents.
+   - English stop-words ("the", "is", "in", "and", etc.) are automatically pruned.
+   - Generates a sparse/dense term-document matrix V of shape (N_movies, 5000).
+
+2. Cosine Similarity Metric:
+   - Evaluates similarity between two non-zero vectors in an inner product space:
+       Similarity(A, B) = cos(theta) = (A . B) / (||A|| * ||B||)
+       Similarity(A, B) = sum(A_i * B_i) / ( sqrt(sum(A_i^2)) * sqrt(sum(B_i^2)) )
+   - Bounded in range [0, 1] for non-negative token count vectors.
+   - Robust against document length variations because it normalizes for vector
+     magnitude, measuring purely angular directional alignment.
+
+3. Porter Stemming Algorithm:
+   - Algorithmic process created by Martin Porter (1980) based on morphological
+     transformations and conditional suffix removal rules (e.g., Step 1a, 1b... 5b).
+   - Unifies variant forms of identical words into single canonical features:
+       "activity", "activities" -> "activ"
+       "director", "directing", "directed" -> "direct"
+
+4. Gestalt Pattern Matching (Ratcliff-Obershelp / SequenceMatcher):
+   - Used by `difflib.get_close_matches(word, possibilities, n=1, cutoff=0.6)`.
+   - Metric based on 2 * M / (T), where M is the number of matching characters in
+     the longest common contiguous subsequences and T is total characters.
+   - Guarantees high-precision fuzzy matching against catalogue titles without
+     requiring external Levenshtein dependencies.
+
+5. Dynamic Hybrid Content Projection:
+   - When a requested movie is absent from the local training dataset, its metadata
+     is fetched via API and projected into the previously learned vocabulary
+     using `cv.transform([api_tags])`.
+   - The resulting vector in R^5000 is directly compared via cosine similarity
+     against the static offline matrix `vector` in R^(4806 x 5000).
+
+
+================================================================================
+5. FUNCTIONS REFERENCE & IMPLEMENTATION DETAILS
+================================================================================
+
+A. Data Preprocessing Functions (movie-recom-sys.ipynb):
+--------------------------------------------------------------------------------
+1. convert(text: str) -> list[str]
+   - Description: Parses string-serialized JSON arrays from 'genres' and 'keywords'.
+   - Implementation:
+       def convert(text):
+           l = []
+           for i in ast.literal_eval(text):
+               l.append(i['name'])
+           return l
+
+2. convert_cast(text: str) -> list[str]
+   - Description: Extracts the top 4 billed actors/actresses from the 'cast' JSON string.
+   - Implementation:
+       def convert_cast(text):
+           l = []
+           counter = 0
+           for i in ast.literal_eval(text):
+               if counter < 4:
+                   l.append(i['name'])
+               counter += 1
+           return l
+
+3. fectch_director(text: str) -> list[str]
+   - Description: Locates the crew member with job title 'Director' from 'crew' JSON.
+   - Implementation:
+       def fectch_director(text):
+           l = []
+           for i in ast.literal_eval(text):
+               if i['job'] == 'Director':
+                   l.append(i['name'])
+                   break
+           return l
+
+4. remove_space(word: list[str]) -> list[str]
+   - Description: Removes spaces within entities so full names and compound concepts
+     become distinct atomic tokens (e.g., 'Sam Worthington' -> 'SamWorthington',
+     preventing collision with 'Sam Mendes').
+   - Implementation:
+       def remove_space(word):
+           return [i.replace(" ", "") for i in word]
+
+5. stems(text: str) -> str
+   - Description: Tokenizes string by whitespace, applies Porter Stemmer to each
+     word, and joins them back with single spaces.
+   - Implementation:
+       def stems(text):
+           return " ".join([ps.stem(i) for i in text.split()])
+
+
+B. Hybrid Recommendation Functions (movie-rec-hybrid.ipynb):
+--------------------------------------------------------------------------------
+1. fetch_movie_data_from_api(movie_title: str) -> dict | None
+   - Description: Queries TMDB v3 API across multiple endpoints to construct the
+     exact feature schema matching the training pipeline.
+   - Parameters:
+       movie_title (str): Title of the movie to query.
+   - Returns:
+       dict: {"title": str, "tags": str} or None if not found.
+   - Workflow:
+       a. Hits `/3/search/movie` to obtain the primary TMDB `movie_id`.
+       b. Hits `/3/movie/{movie_id}` to retrieve genres & overview.
+       c. Hits `/3/movie/{movie_id}/keywords` to retrieve movie keywords.
+       d. Hits `/3/movie/{movie_id}/credits` to retrieve top 4 cast and Director.
+       e. Strips whitespace from entities, merges fields into 'tags', and applies `stems()`.
+
+2. recommend(movie_title: str) -> None
+   - Description: Main public entry point for movie recommendations.
+   - Execution Logic:
+       Step 1: Queries `difflib.get_close_matches` against `new_df['title']` (cutoff=0.6).
+       Step 2 (Local Path):
+               If matched, resolves the DataFrame index, extracts the row from
+               precomputed `similarity` matrix, sorts top cosine scores, and
+               prints top 5 recommendations.
+       Step 3 (API Fallback Path):
+               If no local match, calls `fetch_movie_data_from_api(movie_title)`.
+               Vectorizes tags via `cv.transform([data['tags']]).toarray()`.
+               Computes live cosine similarity against global `vector` matrix.
+               Ranks distances and outputs top 5 local recommendations.
+
+
+================================================================================
+6. DATA PERSISTENCE & ARTIFACTS (.pkl files)
+================================================================================
+1. new_df.pkl (~2.3 MB)
+   - Serialized Pandas DataFrame containing processed movie catalogue:
+     Columns: ['movie_id', 'title', 'tags'] (4,806 rows).
+2. similarity.pkl (~184.8 MB)
+   - Precomputed 2D NumPy array of shape (4806, 4806) representing pairwise
+     cosine similarities between all local movies.
+3. cv.pkl (~143 KB)
+   - Fitted Scikit-Learn `CountVectorizer` object retaining the 5,000-word
+     vocabulary and stop-word rules for runtime transform.
+4. vector.pkl (~192.2 MB)
+   - Precomputed dense NumPy feature matrix of shape (4806, 5000) containing
+     bag-of-words token counts for all 4,806 movies.
+
+
+================================================================================
+7. DATASETS USED
+================================================================================
+1. tmdb_5000_movies.csv (~5.7 MB, 4,803 rows)
+   - Columns: budget, genres, homepage, id, keywords, original_language,
+     original_title, overview, popularity, production_companies,
+     production_countries, release_date, revenue, runtime, spoken_languages,
+     status, tagline, title, vote_average, vote_count.
+2. tmdb_5000_credits.csv (~40.0 MB, 4,803 rows)
+   - Columns: movie_id, title, cast, crew.
+
+================================================================================
+                           END OF TECHNICAL SPECIFICATION
+================================================================================
