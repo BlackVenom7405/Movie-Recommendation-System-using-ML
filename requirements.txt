@@ -9,6 +9,10 @@ nltk>=3.8.1
 # API & Networking (TMDB Hybrid Fallback Engine)
 requests>=2.28.0
 
+# Web Application & REST API Server
+Flask>=3.0.0
+flask-cors>=4.0.0
+
 # Data Visualization & Notebook Runtime
 matplotlib>=3.7.0
 ipykernel>=6.20.0

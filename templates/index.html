@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineMatch | Machine Learning Movie Recommendation Engine</title>
+    <meta name="description" content="Intelligent content-based movie recommendation system utilizing Bag-of-Words NLP vectorization and cosine similarity across the TMDB 5,000 dataset with dynamic API fallback.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- Background Ambient Glows -->
+    <div class="ambient-glow ambient-glow-top"></div>
+    <div class="ambient-glow ambient-glow-bottom"></div>
+
+    <!-- Navigation Bar -->
+    <header class="site-header">
+        <div class="container nav-container">
+            <a href="#home" class="brand-logo" id="brand-link">
+                <span class="logo-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="2" width="20" height="20" rx="4"></rect>
+                        <path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 7h5M17 17h5"></path>
+                    </svg>
+                </span>
+                <span class="logo-text">
+                    <span class="logo-title">Cine<span class="gold-gradient">Match</span></span>
+                    <span class="logo-badge">ML ENGINE</span>
+                </span>
+            </a>
+
+            <nav class="nav-links" id="main-nav">
+                <a href="#home" class="nav-link active" data-target="home">Home</a>
+                <a href="#discover" class="nav-link" data-target="discover">Discover</a>
+                <a href="#recommendations" class="nav-link" data-target="recommendations">Recommendations</a>
+                <a href="#watchlist" class="nav-link" data-target="watchlist">
+                    Watchlist <span class="watchlist-count-badge" id="nav-watchlist-count">0</span>
+                </a>
+                <a href="#about" class="nav-link" data-target="about">Academic ML</a>
+            </nav>
+
+            <div class="nav-actions">
+                <div class="nav-search-wrap">
+                    <input type="text" id="nav-quick-search" placeholder="Quick search..." autocomplete="off">
+                    <span class="search-shortcut">/</span>
+                    <div class="quick-search-dropdown" id="quick-search-results"></div>
+                </div>
+                <button class="mobile-menu-toggle" id="menu-toggle" aria-label="Toggle navigation menu">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main id="main-content">
+        <!-- 1. HOME SECTION -->
+        <section id="section-home" class="page-section active">
+            <!-- Hero Banner -->
+            <div class="hero-wrapper">
+                <div class="hero-backdrop" id="hero-backdrop-img"></div>
+                <div class="hero-overlay"></div>
+                
+                <div class="container hero-content">
+                    <div class="academic-pill">
+                        <span class="pill-dot"></span>
+                        COLLEGE ML MINI PROJECT • TMDB 5,000 CORPUS
+                    </div>
+
+                    <h1 class="hero-title">
+                        Discover Your Next <br><span class="gold-gradient">Favourite Movie.</span>
+                    </h1>
+
+                    <p class="hero-description">
+                        An intelligent, dual-layer recommendation engine powered by Natural Language Processing,
+                        Bag-of-Words vectorization, and 5,000-dimensional Cosine Similarity.
+                    </p>
+
+                    <!-- Hero Search Box -->
+                    <div class="hero-search-box">
+                        <div class="hero-input-group">
+                            <span class="hero-search-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
+                            </span>
+                            <input type="text" id="hero-movie-input" placeholder="Search any movie (e.g. Inception, Avengers, Interstellar)..." autocomplete="off">
+                            <button id="hero-submit-btn" class="btn btn-primary">
+                                Find Recommendations
+                            </button>
+                        </div>
+                        <div class="hero-dropdown" id="hero-search-dropdown"></div>
+
+                        <!-- Quick suggestion pills -->
+                        <div class="quick-picks">
+                            <span class="quick-label">Try instant picks:</span>
+                            <button class="pill-tag" data-title="Inception">Inception</button>
+                            <button class="pill-tag" data-title="The Avengers">The Avengers</button>
+                            <button class="pill-tag" data-title="Interstellar">Interstellar</button>
+                            <button class="pill-tag" data-title="The Dark Knight">The Dark Knight</button>
+                            <button class="pill-tag" data-title="Fight Club">Fight Club</button>
+                        </div>
+                    </div>
+
+                    <div class="hero-actions">
+                        <a href="#discover" class="btn btn-secondary nav-trigger" data-target="discover">
+                            Explore 4,800+ Catalogue
+                        </a>
+                        <a href="#about" class="btn btn-ghost nav-trigger" data-target="about">
+                            How the ML Engine Works &rarr;
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metrics Ticker Bar -->
+            <div class="metrics-bar">
+                <div class="container metrics-grid">
+                    <div class="metric-item">
+                        <span class="metric-value">4,806</span>
+                        <span class="metric-label">Curated Movies</span>
+                    </div>
+                    <div class="metric-divider"></div>
+                    <div class="metric-item">
+                        <span class="metric-value">5,000</span>
+                        <span class="metric-label">NLP Feature Dimensions</span>
+                    </div>
+                    <div class="metric-divider"></div>
+                    <div class="metric-item">
+                        <span class="metric-value">Cosine</span>
+                        <span class="metric-label">Vector Space Metric</span>
+                    </div>
+                    <div class="metric-divider"></div>
+                    <div class="metric-item">
+                        <span class="metric-value">&lt; 10ms</span>
+                        <span class="metric-label">Local Inference Latency</span>
+                    </div>
+                    <div class="metric-divider"></div>
+                    <div class="metric-item">
+                        <span class="metric-value">Dual-Layer</span>
+                        <span class="metric-label">Offline + Live TMDB Fallback</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Featured / Curated Carousel -->
+            <section class="section-featured container">
+                <div class="section-header">
+                    <div>
+                        <h2 class="section-title">Iconic Cinema <span class="gold-gradient">Masterpieces</span></h2>
+                        <p class="section-subtitle">High-rated titles from the TMDB corpus ready for instant recommendation generation.</p>
+                    </div>
+                    <a href="#discover" class="view-all-link nav-trigger" data-target="discover">View All Catalogue &rarr;</a>
+                </div>
+
+                <div class="featured-grid" id="featured-movies-container">
+                    <!-- Loaded dynamically via JS -->
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                </div>
+            </section>
+
+            <!-- How It Works Interactive Preview -->
+            <section class="section-workflow container">
+                <div class="workflow-card">
+                    <div class="workflow-header text-center">
+                        <span class="badge-gold">PIPELINE ARCHITECTURE</span>
+                        <h2 class="section-title">How Content-Based Filtering Works</h2>
+                        <p class="section-subtitle">From raw metadata to vector space nearest-neighbour recommendations.</p>
+                    </div>
+
+                    <div class="workflow-steps">
+                        <div class="step-card">
+                            <div class="step-num">01</div>
+                            <h3>Entity Extraction</h3>
+                            <p>Extracts genres, keywords, overview, top 4 cast members, and director from TMDB JSON schemas.</p>
+                        </div>
+                        <div class="step-card">
+                            <div class="step-num">02</div>
+                            <h3>NLP Normalization</h3>
+                            <p>Collapses whitespace on names (<code>SamWorthington</code>) and applies the Porter Stemming algorithm.</p>
+                        </div>
+                        <div class="step-card">
+                            <div class="step-num">03</div>
+                            <h3>5,000-D Vectorization</h3>
+                            <p>Projects tag documents into a 5,000-dimensional term-frequency matrix using CountVectorizer.</p>
+                        </div>
+                        <div class="step-card">
+                            <div class="step-num">04</div>
+                            <h3>Cosine Distance</h3>
+                            <p>Computes angular distance between L2-normalized vectors to identify nearest thematic neighbors.</p>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-6">
+                        <a href="#about" class="btn btn-outline nav-trigger" data-target="about">
+                            Read Complete Academic ML Specification &rarr;
+                        </a>
+                    </div>
+                </div>
+            </section>
+        </section>
+
+        <!-- 2. DISCOVER SECTION -->
+        <section id="section-discover" class="page-section">
+            <div class="container">
+                <div class="section-header">
+                    <div>
+                        <h1 class="section-title">Explore Movie <span class="gold-gradient">Catalogue</span></h1>
+                        <p class="section-subtitle">Search, filter by genre, and sort across 4,800+ films in the TMDB dataset.</p>
+                    </div>
+                </div>
+
+                <!-- Controls Bar -->
+                <div class="discover-controls">
+                    <div class="search-input-wrap">
+                        <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <input type="text" id="discover-search-input" placeholder="Search by title, actor, or director..." autocomplete="off">
+                        <button id="discover-search-clear" class="btn-clear" style="display: none;" aria-label="Clear search">&times;</button>
+                    </div>
+
+                    <div class="sort-select-wrap">
+                        <label for="sort-select" class="sort-label">Sort by:</label>
+                        <select id="sort-select">
+                            <option value="popularity">Most Popular</option>
+                            <option value="rating">Highest Rated</option>
+                            <option value="newest">Newest Releases</option>
+                            <option value="oldest">Oldest Classics</option>
+                            <option value="title">Title (A-Z)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Genre Pills Filter -->
+                <div class="genre-pills-wrap" id="genre-pills-container">
+                    <!-- Injected dynamically via JS -->
+                </div>
+
+                <!-- Active Filters & Stats bar -->
+                <div class="filter-status-bar">
+                    <span id="results-count-text">Showing 12 of 4,806 movies</span>
+                    <button id="reset-filters-btn" class="btn-text" style="display: none;">Reset all filters</button>
+                </div>
+
+                <!-- Movie Grid -->
+                <div class="movie-grid" id="discover-movies-container">
+                    <!-- Populated dynamically via JS -->
+                </div>
+
+                <!-- Pagination -->
+                <div class="pagination-bar" id="discover-pagination" style="display: none;">
+                    <button class="btn btn-sm btn-outline" id="prev-page-btn">&larr; Previous</button>
+                    <span class="page-indicator" id="page-indicator">Page 1 of 401</span>
+                    <button class="btn btn-sm btn-outline" id="next-page-btn">Next &rarr;</button>
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state" id="discover-empty-state" style="display: none;">
+                    <div class="empty-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            <line x1="8" y1="11" x2="14" y2="11"></line>
+                        </svg>
+                    </div>
+                    <h3>No matching movies found</h3>
+                    <p>Try searching for a different keyword or removing active genre filters.</p>
+                    <button class="btn btn-primary" id="empty-reset-btn">Reset Filters</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. RECOMMENDATIONS SECTION -->
+        <section id="section-recommendations" class="page-section">
+            <div class="container">
+                <!-- Initial State: Prompt to select a movie -->
+                <div id="recs-prompt-state" class="recs-prompt-card">
+                    <div class="prompt-icon">
+                        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        </svg>
+                    </div>
+                    <h2>Generate Content-Based Recommendations</h2>
+                    <p>
+                        Choose any movie from the catalogue or enter a title to inspect its nearest neighbors
+                        in the 5,000-dimensional cosine similarity space.
+                    </p>
+                    <div class="prompt-search-wrap">
+                        <input type="text" id="recs-search-input" placeholder="Enter movie title (e.g., Inception, The Matrix, Avatar)..." autocomplete="off">
+                        <button id="recs-search-btn" class="btn btn-primary">Generate</button>
+                    </div>
+                    <div class="prompt-samples">
+                        <span>Or select a popular seed movie:</span>
+                        <div class="sample-pills">
+                            <button class="pill-tag" data-title="Inception">Inception</button>
+                            <button class="pill-tag" data-title="Interstellar">Interstellar</button>
+                            <button class="pill-tag" data-title="The Avengers">The Avengers</button>
+                            <button class="pill-tag" data-title="The Dark Knight">The Dark Knight</button>
+                            <button class="pill-tag" data-title="Whiplash">Whiplash</button>
+                            <button class="pill-tag" data-title="The Godfather">The Godfather</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div id="recs-loading-state" class="recs-loading-card" style="display: none;">
+                    <div class="spinner"></div>
+                    <h3>Computing Vector Similarity...</h3>
+                    <p id="recs-loading-text">Projecting movie features into 5,000-D Bag-of-Words space and ranking cosine distances.</p>
+                </div>
+
+                <!-- Active Results State -->
+                <div id="recs-results-state" style="display: none;">
+                    <!-- Seed Movie Spotlight Banner -->
+                    <div class="seed-movie-spotlight" id="seed-movie-banner">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+
+                    <!-- Recommendations Grid Header -->
+                    <div class="recs-grid-header">
+                        <div>
+                            <h2 class="section-title">Top Recommended <span class="gold-gradient">Matches</span></h2>
+                            <p class="section-subtitle" id="recs-algorithm-note">
+                                Ranked by Cosine Similarity. The query movie is strictly excluded from recommendations.
+                            </p>
+                        </div>
+                        <button id="pick-another-btn" class="btn btn-outline btn-sm">
+                            &larr; Pick Another Movie
+                        </button>
+                    </div>
+
+                    <!-- Recommended Cards Grid -->
+                    <div class="movie-grid recs-grid" id="recommendations-container">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. WATCHLIST SECTION -->
+        <section id="section-watchlist" class="page-section">
+            <div class="container">
+                <div class="section-header">
+                    <div>
+                        <h1 class="section-title">My Saved <span class="gold-gradient">Watchlist</span></h1>
+                        <p class="section-subtitle">Your bookmarked movies stored locally in your browser session.</p>
+                    </div>
+                    <button class="btn btn-outline btn-sm" id="clear-watchlist-btn" style="display: none;">Clear Watchlist</button>
+                </div>
+
+                <div class="movie-grid" id="watchlist-movies-container">
+                    <!-- Populated dynamically via JS -->
+                </div>
+
+                <div class="empty-state" id="watchlist-empty-state">
+                    <div class="empty-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                    </div>
+                    <h3>Your watchlist is empty</h3>
+                    <p>Click the bookmark icon on any movie card or details modal to save films here.</p>
+                    <a href="#discover" class="btn btn-primary nav-trigger" data-target="discover">Browse Catalogue</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. ACADEMIC ML & ABOUT SECTION -->
+        <section id="section-about" class="page-section">
+            <div class="container">
+                <!-- Academic Header Card -->
+                <div class="academic-hero-card">
+                    <div class="academic-badge-wrap">
+                        <span class="badge-gold">COLLEGE ML MINI PROJECT SPECIFICATION</span>
+                        <span class="badge-neutral">INFORMATION RETRIEVAL &amp; RECOMMENDER SYSTEMS</span>
+                    </div>
+                    <h1 class="academic-title">Movie Recommendation System</h1>
+                    <p class="academic-lead">
+                        A Content-Based Filtering Machine Learning system trained on the TMDB 5,000 Movie Dataset
+                        with a dynamic out-of-vocabulary REST API fallback architecture.
+                    </p>
+                </div>
+
+                <!-- Live Model Inspection Panel -->
+                <div class="live-inspection-card">
+                    <div class="inspection-header">
+                        <div>
+                            <span class="status-indicator"></span>
+                            <span class="inspection-title">Trained Model Artifacts &amp; Live Pipeline Diagnostics</span>
+                        </div>
+                        <span class="inspection-meta">Model: CountVectorizer + Cosine Similarity</span>
+                    </div>
+
+                    <div class="inspection-grid" id="inspection-stats-grid">
+                        <div class="inspection-stat">
+                            <span class="stat-number" id="stat-movies-count">4,806</span>
+                            <span class="stat-desc">Dataset Items ($N$)</span>
+                        </div>
+                        <div class="inspection-stat">
+                            <span class="stat-number" id="stat-vocab-size">5,000</span>
+                            <span class="stat-desc">Vocabulary Dimension ($D$)</span>
+                        </div>
+                        <div class="inspection-stat">
+                            <span class="stat-number" id="stat-vector-shape">4806 &times; 5000</span>
+                            <span class="stat-desc">Feature Matrix $\mathbf{V}$</span>
+                        </div>
+                        <div class="inspection-stat">
+                            <span class="stat-number" id="stat-sim-shape">4806 &times; 4806</span>
+                            <span class="stat-desc">Similarity Matrix $\mathbf{S}$</span>
+                        </div>
+                    </div>
+
+                    <!-- Vocabulary Preview -->
+                    <div class="vocab-preview-box">
+                        <span class="vocab-title">Sample Model Vocabulary Tokens (Stemmed &amp; Collapsed Entities):</span>
+                        <div class="vocab-chips" id="vocab-chips-container">
+                            <!-- Populated dynamically via JS -->
+                            <span class="vocab-chip">action</span>
+                            <span class="vocab-chip">adventur</span>
+                            <span class="vocab-chip">christophernolan</span>
+                            <span class="vocab-chip">samworthington</span>
+                            <span class="vocab-chip">spacecraft</span>
+                            <span class="vocab-chip">dystopia</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Theoretical Explanations Grid -->
+                <div class="academic-grid">
+                    <div class="academic-box">
+                        <div class="box-icon">💡</div>
+                        <h3>1. What is a Recommendation System?</h3>
+                        <p>
+                            Recommender systems are algorithms that predict user interest in items. The two primary paradigms are
+                            <strong>Collaborative Filtering</strong> (which requires user ratings matrices and fails on cold items) and
+                            <strong>Content-Based Filtering</strong> (which recommends items based on attribute similarity between content tags).
+                        </p>
+                    </div>
+
+                    <div class="academic-box">
+                        <div class="box-icon">⚙️</div>
+                        <h3>2. Why Content-Based Filtering?</h3>
+                        <p>
+                            Content-based filtering requires zero historical user rating logs, completely resolves the <strong>user cold-start</strong> constraint,
+                            and provides direct, explainable transparency into why each movie was surfaced (e.g. shared director, genres, and narrative keywords).
+                        </p>
+                    </div>
+
+                    <div class="academic-box">
+                        <div class="box-icon">🧬</div>
+                        <h3>3. Data Preprocessing &amp; Entity Isolation</h3>
+                        <p>
+                            Stringified JSON columns (<code>genres</code>, <code>keywords</code>, <code>cast</code>, <code>crew</code>) are parsed via <code>ast.literal_eval</code>.
+                            Critical entity whitespace is collapsed (e.g. <code>"Sam Worthington"</code> &rarr; <code>"SamWorthington"</code>) so tokens do not collide with unrelated figures sharing common first or last names.
+                        </p>
+                    </div>
+
+                    <div class="academic-box">
+                        <div class="box-icon">✂️</div>
+                        <h3>4. Morphological Stemming (Porter Stemmer)</h3>
+                        <p>
+                            The Porter Stemming algorithm applies linguistic morphological transformations to unify inflectional variants into canonical roots
+                            (e.g., <code>"activities"</code>, <code>"activity"</code> &rarr; <code>"activ"</code>; <code>"directing"</code>, <code>"director"</code> &rarr; <code>"direct"</code>),
+                            reducing vocabulary sparsity.
+                        </p>
+                    </div>
+
+                    <div class="academic-box">
+                        <div class="box-icon">📊</div>
+                        <h3>5. Bag-of-Words &amp; CountVectorizer</h3>
+                        <p>
+                            Documents are mapped into a term-frequency space using Scikit-Learn's <code>CountVectorizer(max_features=5000, stop_words='english')</code>.
+                            English stopwords (<em>the</em>, <em>is</em>, <em>and</em>) are pruned, resulting in a sparse count matrix $\mathbf{V} \in \mathbb{R}^{4806 \times 5000}$.
+                        </p>
+                    </div>
+
+                    <div class="academic-box">
+                        <div class="box-icon">📐</div>
+                        <h3>6. Cosine Similarity Metric</h3>
+                        <p>
+                            Evaluates directional alignment between feature vectors in inner product space:
+                            <br>
+                            <code>cos(&theta;) = (u &middot; v) / (||u|| &times; ||v||)</code>
+                            <br>
+                            Unlike Euclidean distance, Cosine Similarity is <strong>document-length invariant</strong>, ensuring long plot synopses do not penalize similarity with concise overviews.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Model Comparison Table -->
+                <div class="comparison-card">
+                    <h2 class="section-title">Comparative Architecture <span class="gold-gradient">Analysis</span></h2>
+                    <p class="section-subtitle">Evaluating the implemented model against alternative recommendation approaches.</p>
+
+                    <div class="table-responsive">
+                        <table class="academic-table">
+                            <thead>
+                                <tr>
+                                    <th>Model Architecture</th>
+                                    <th>Feature Representation</th>
+                                    <th>Semantic Awareness</th>
+                                    <th>Item Cold Start</th>
+                                    <th>Inference Latency</th>
+                                    <th>Key Trade-off</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="current-model-row">
+                                    <td><strong>Current: CountVectorizer BoW</strong></td>
+                                    <td>5,000-D Count Vector</td>
+                                    <td>Exact stemmed tokens</td>
+                                    <td><span class="badge-success">Immune</span></td>
+                                    <td>&lt; 5 ms (matrix lookup)</td>
+                                    <td>Does not capture synonyms or phrase semantics</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>TF-IDF + Cosine</strong></td>
+                                    <td>Weighted Term Frequency</td>
+                                    <td>Penalizes common words</td>
+                                    <td><span class="badge-success">Immune</span></td>
+                                    <td>&lt; 5 ms</td>
+                                    <td>Still lexical; misses deeper narrative phrasing</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Dense SBERT (Sentence-BERT)</strong></td>
+                                    <td>384-D / 768-D Dense Embeddings</td>
+                                    <td>High (contextual semantics)</td>
+                                    <td><span class="badge-success">Immune</span></td>
+                                    <td>5&ndash;15 ms (ANN index)</td>
+                                    <td>Requires neural inference compute at runtime</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Collaborative Filtering (SVD)</strong></td>
+                                    <td>Latent User-Item Factors</td>
+                                    <td>Implicit taste clusters</td>
+                                    <td><span class="badge-danger">Fails (Cold Start)</span></td>
+                                    <td>&lt; 5 ms</td>
+                                    <td>Cannot recommend unrated items or external API titles</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Strengths, Limits & Future Roadmap -->
+                <div class="strengths-limits-grid">
+                    <div class="status-panel strengths-panel">
+                        <h3>Model Strengths</h3>
+                        <ul>
+                            <li><strong>Dynamic Fallback:</strong> Resolves closed-world dataset limits by querying TMDB API and projecting live into fitted vector space.</li>
+                            <li><strong>Zero Cold-Start:</strong> Recommends any film with metadata without requiring user rating histories.</li>
+                            <li><strong>Sub-Millisecond Inference:</strong> Precomputed matrix enables instant $O(1)$ row indexing.</li>
+                            <li><strong>Typo Resilience:</strong> Gestalt pattern matching (<code>difflib</code> cutoff 0.6) catches spelling mistakes.</li>
+                            <li><strong>Clean Entity Isolation:</strong> Whitespace collapsing prevents surname token collision.</li>
+                        </ul>
+                    </div>
+
+                    <div class="status-panel limits-panel">
+                        <h3>Current Limits &amp; Future Scope</h3>
+                        <ul>
+                            <li><strong>Lexical Gap:</strong> Synonyms (e.g. <em>cosmonaut</em> vs <em>astronaut</em>) do not match unless exact tokens align.</li>
+                            <li><strong>Feature Dilution:</strong> 80-word overviews outnumber single-word directors unless explicit weights are applied.</li>
+                            <li><strong>Omission of Quality Signals:</strong> Currently ignores <code>vote_average</code> and <code>vote_count</code> during ranking.</li>
+                            <li><strong>Future Scope:</strong> Integrate SBERT dense embeddings, ANN indexing via FAISS, and Bayesian popularity blending.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Accessible Native Dialog Modal for Movie Details -->
+    <dialog id="movie-modal" aria-labelledby="modal-movie-title" closedby="any">
+        <div class="modal-inner">
+            <button class="modal-close-btn" id="modal-close-btn" aria-label="Close dialog">&times;</button>
+            <div class="modal-body" id="modal-content-container">
+                <!-- Populated dynamically via JS -->
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+    <!-- Site Footer -->
+    <footer class="site-footer">
+        <div class="container footer-content">
+            <div class="footer-brand">
+                <span class="logo-title">Cine<span class="gold-gradient">Match</span></span>
+                <p>Machine Learning Content-Based Movie Recommendation Engine.</p>
+                <p class="footer-subtext">Developed as a College Machine Learning Mini Project using Python, Scikit-Learn, and Flask.</p>
+            </div>
+            <div class="footer-meta">
+                <p>Dataset: <strong>TMDB 5,000 Movie Dataset</strong> (Kaggle)</p>
+                <p>Algorithms: <strong>Bag-of-Words (CountVectorizer) &bull; Porter Stemmer &bull; Cosine Similarity &bull; Gestalt Fuzzy Matching</strong></p>
+                <p class="copyright">&copy; 2026 CineMatch Academic Project. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Application Script -->
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
+

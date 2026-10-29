@@ -1,68 +1,57 @@
 # ==============================================================================
-# Git Ignore Configuration - Movie Recommendation System
+# CineMatch - Movie Recommendation System (.gitignore)
+# Comprehensive ignore rules for Python, Virtualenvs, IDEs, and Large ML Pickles
 # ==============================================================================
 
-# Byte-compiled / optimized / DLL files
+# ------------------------------------------------------------------------------
+# 1. Byte-compiled / Optimized / Runtime files
+# ------------------------------------------------------------------------------
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+*.dylib
+*.dll
 
-# C extensions
-*.so
-
-# Distribution / packaging
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
-# Virtual Environments
+# ------------------------------------------------------------------------------
+# 2. Virtual Environments
+# ------------------------------------------------------------------------------
 .venv/
 venv/
 ENV/
 env/
 env.bak/
 venv.bak/
-bin/
-include/
-lib/
 
-# Jupyter Notebook checkpoints & cache
-.ipynb_checkpoints
-*/.ipynb_checkpoints/*
-
-# Large Machine Learning Models & Serialized Pickles (>100MB exceeds GitHub limits)
-*.pkl
-*.pickle
-cv.pkl
+# ------------------------------------------------------------------------------
+# 3. Large Machine Learning Model Artifacts (>100MB exceeds GitHub push limits)
+# Note: similarity.pkl (~185MB) and vector.pkl (~192MB) are automatically
+# computed and cached on startup from new_df.pkl (2.3MB) and cv.pkl (143KB).
+# ------------------------------------------------------------------------------
 similarity.pkl
 vector.pkl
-new_df.pkl
+*.h5
+*.pt
+*.pth
+*.onnx
+*.bin
 
-# Datasets (CSV files: ~40MB and ~5.7MB, within GitHub 100MB limit - tracked)
-# !tmdb_5000_credits.csv
-# !tmdb_5000_movies.csv
+# ------------------------------------------------------------------------------
+# 4. Jupyter Notebook & Interactive Runtime
+# ------------------------------------------------------------------------------
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
 
-# Environment variables, credentials, and API keys
+# ------------------------------------------------------------------------------
+# 5. Environment Variables & Secret Credentials
+# ------------------------------------------------------------------------------
 .env
 .env.*
 *.env
 
-# IDE & Editor Configurations
+# ------------------------------------------------------------------------------
+# 6. IDEs & Code Editors
+# ------------------------------------------------------------------------------
 .idea/
 .vscode/
 *.swp
@@ -72,7 +61,9 @@ new_df.pkl
 .pydevproject
 .settings/
 
-# macOS / OS metadata
+# ------------------------------------------------------------------------------
+# 7. Operating System Artifacts
+# ------------------------------------------------------------------------------
 .DS_Store
 .DS_Store?
 ._*
@@ -80,11 +71,13 @@ new_df.pkl
 .Trashes
 ehthumbs.db
 Thumbs.db
+desktop.ini
 
-# Logs and databases
+# ------------------------------------------------------------------------------
+# 8. Logs, Testing & Coverage
+# ------------------------------------------------------------------------------
 *.log
+.pytest_cache/
+.coverage
+htmlcov/
 *.sqlite3
-vector.pkl
-similarity.pkl
-*.pkl
-*.pkl
